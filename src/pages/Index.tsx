@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast'; // Import directly from hooks
+import { useToast } from '@/hooks/use-toast';
 import TabBar from '@/components/TabBar';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
