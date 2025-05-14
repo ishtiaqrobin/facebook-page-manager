@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
+interface FacebookPage {
+  id: string;
+  name: string;
+}
 
 interface Tab {
   id: string;
@@ -18,6 +25,7 @@ interface Tab {
     name: string;
     profilePicture: string;
   };
+  pages: FacebookPage[];
 }
 
 const TabBar: React.FC = () => {
@@ -83,6 +91,7 @@ const TabBar: React.FC = () => {
       token: '',
       active: true,
       isLoggedIn: false,
+      pages: []
     };
   };
 
@@ -236,74 +245,50 @@ interface TabContentProps {
 }
 
 const TabContent: React.FC<TabContentProps> = ({ tab, updateTab }) => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [hashtag, setHashtag] = useState('');
   const { toast } = useToast();
+  const [activePageId, setActivePageId] = useState<string | null>(null);
+
+  // Default mock pages data
+  const mockPages = [
+    { id: '1', name: 'Business Page' },
+    { id: '2', name: 'Community Page' }
+  ];
 
   const handleLogin = () => {
     // Simulate Facebook login
+    const pages = mockPages; // Use mock data for pages
+    
     updateTab(tab.id, { 
       isLoggedIn: true,
       profileData: {
         name: "John Doe",
         profilePicture: "https://i.pravatar.cc/300?u=" + tab.id,
-      }
+      },
+      pages: pages
     });
+    
+    if (pages.length > 0) {
+      setActivePageId(pages[0].id);
+    }
     
     toast({
       title: "Login successful",
-      description: "You have successfully logged in with Facebook.",
+      description: `You have successfully logged in with Facebook. Found ${pages.length} pages.`,
     });
   };
 
   const handleLogout = () => {
     updateTab(tab.id, { 
       isLoggedIn: false,
-      profileData: undefined
+      profileData: undefined,
+      pages: []
     });
+    
+    setActivePageId(null);
     
     toast({
       title: "Logout successful",
       description: "You have been logged out from Facebook.",
-    });
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-      
-      toast({
-        title: "File selected",
-        description: `${e.target.files[0].name} has been selected.`,
-      });
-    }
-  };
-
-  const handleUpload = () => {
-    if (!selectedFile) {
-      toast({
-        title: "Upload failed",
-        description: "Please select a file first.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Simulate upload
-    toast({
-      title: "Upload successful",
-      description: `${selectedFile.name} has been uploaded${hashtag ? ' with hashtag: ' + hashtag : ''}.`,
-    });
-    
-    // Reset form
-    setSelectedFile(null);
-    setHashtag('');
-  };
-
-  const handleVisitPage = () => {
-    toast({
-      title: "Visit page",
-      description: "Redirecting to your Facebook page (simulated).",
     });
   };
 
@@ -385,6 +370,36 @@ const TabContent: React.FC<TabContentProps> = ({ tab, updateTab }) => {
                       <span className="text-sm text-gray-600 dark:text-gray-400">Active</span>
                     </div>
                   </div>
+
+                  {/* Pages Selection */}
+                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                    <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Pages</h5>
+                    <div className="space-y-2">
+                      {tab.pages && tab.pages.length > 0 ? (
+                        <Tabs 
+                          defaultValue={tab.pages[0].id} 
+                          onValueChange={setActivePageId}
+                          value={activePageId || undefined}
+                        >
+                          <TabsList className="w-full">
+                            {tab.pages.map(page => (
+                              <TabsTrigger 
+                                key={page.id} 
+                                value={page.id}
+                                className="flex-1 text-xs"
+                              >
+                                {page.name}
+                              </TabsTrigger>
+                            ))}
+                          </TabsList>
+                        </Tabs>
+                      ) : (
+                        <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                          No pages found
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 text-center">
@@ -397,100 +412,45 @@ const TabContent: React.FC<TabContentProps> = ({ tab, updateTab }) => {
               )}
             </div>
             
-            {/* Middle and Right columns: Upload form */}
+            {/* Middle and Right columns: Pages content */}
             <div className="col-span-1 lg:col-span-2 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* File upload */}
-                <div>
-                  <Label 
-                    htmlFor={`file-upload-${tab.id}`}
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    Upload Media
-                  </Label>
-                  <div className="flex items-center">
-                    <label 
-                      htmlFor={`file-upload-${tab.id}`}
-                      className={`flex items-center justify-center w-full h-32 px-4 transition bg-white dark:bg-gray-800 
-                                  border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-md appearance-none cursor-pointer
-                                  hover:border-facebook focus:outline-none ${!tab.isLoggedIn ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <span className="flex items-center space-x-2">
-                        <FileImage size={24} className="text-gray-500 dark:text-gray-400" />
-                        <span className="font-medium text-gray-600 dark:text-gray-300">
-                          {selectedFile ? selectedFile.name : "Click to select a file"}
-                        </span>
-                      </span>
-                      <input 
-                        id={`file-upload-${tab.id}`}
-                        name="file_upload" 
-                        type="file" 
-                        className="hidden"
-                        onChange={handleFileChange}
-                        disabled={!tab.isLoggedIn}
-                        accept="image/*,video/*"
+              {tab.isLoggedIn && tab.pages && tab.pages.length > 0 ? (
+                <Tabs value={activePageId || undefined}>
+                  {tab.pages.map(page => (
+                    <TabsContent key={page.id} value={page.id} className="mt-0">
+                      <PageContent 
+                        page={page} 
+                        tabId={tab.id}
+                        isLoggedIn={tab.isLoggedIn}
                       />
-                    </label>
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    PNG, JPG, GIF, or MP4 up to 10MB
-                  </p>
-                </div>
-                
-                {/* Hashtag input */}
-                <div>
-                  <div className="space-y-6">
-                    <div>
-                      <Label 
-                        htmlFor={`hashtag-${tab.id}`}
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                      >
-                        Hashtag
-                      </Label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Hash size={18} className="text-gray-400" />
-                        </div>
-                        <Input
-                          id={`hashtag-${tab.id}`}
-                          placeholder="Enter hashtag without # symbol"
-                          className="pl-10"
-                          value={hashtag}
-                          onChange={(e) => setHashtag(e.target.value)}
-                          disabled={!tab.isLoggedIn}
-                        />
-                      </div>
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Facebook Pages</CardTitle>
+                    <CardDescription>
+                      Log in with Facebook to manage your pages
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid place-items-center py-8">
+                    <div className="text-center">
+                      <p className="text-gray-500 dark:text-gray-400">
+                        {tab.isLoggedIn 
+                          ? "No Facebook pages found for this account" 
+                          : "Please login to access your Facebook pages"}
+                      </p>
                     </div>
-                    
-                    <div className="flex items-center space-x-4">
-                      <Button
-                        variant="outline"
-                        className={`flex items-center gap-2 ${!tab.isLoggedIn ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={handleVisitPage}
-                        disabled={!tab.isLoggedIn}
-                      >
-                        <Link size={18} />
-                        Visit Page
-                      </Button>
-                      
-                      <Button
-                        className={`bg-facebook hover:bg-facebook-dark text-white flex items-center gap-2 ${!tab.isLoggedIn ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={handleUpload}
-                        disabled={!tab.isLoggedIn}
-                      >
-                        <Upload size={18} />
-                        Upload Post
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
       </div>
       
-      {/* Additional tab content can go here */}
+      {/* Session Information */}
       <div className="bg-white dark:bg-gray-900 p-5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
         <h3 className="font-medium text-gray-800 dark:text-gray-200 mb-3">Session Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -511,6 +471,185 @@ const TabContent: React.FC<TabContentProps> = ({ tab, updateTab }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+interface PageContentProps {
+  page: FacebookPage;
+  tabId: string;
+  isLoggedIn: boolean;
+}
+
+const PageContent: React.FC<PageContentProps> = ({ page, tabId, isLoggedIn }) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [hashtag, setHashtag] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
+  
+  // Load saved state from sessionStorage
+  useEffect(() => {
+    const savedHashtag = sessionStorage.getItem(`facebook-auto-poster-hashtag-${tabId}-${page.id}`);
+    if (savedHashtag) {
+      setHashtag(savedHashtag);
+    }
+  }, [tabId, page.id]);
+  
+  // Save hashtag to sessionStorage when it changes
+  useEffect(() => {
+    if (hashtag) {
+      sessionStorage.setItem(`facebook-auto-poster-hashtag-${tabId}-${page.id}`, hashtag);
+    }
+  }, [hashtag, tabId, page.id]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+      
+      toast({
+        title: "File selected",
+        description: `${e.target.files[0].name} has been selected for ${page.name}.`,
+      });
+    }
+  };
+
+  const handleUpload = () => {
+    if (!selectedFile) {
+      toast({
+        title: "Upload failed",
+        description: "Please select a file first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Simulate upload with loading state
+    setIsUploading(true);
+    
+    setTimeout(() => {
+      setIsUploading(false);
+      
+      toast({
+        title: "Upload successful",
+        description: `${selectedFile.name} has been uploaded to ${page.name}${hashtag ? ' with hashtag: ' + hashtag : ''}.`,
+      });
+      
+      // Reset form
+      setSelectedFile(null);
+      setHashtag('');
+    }, 1500);
+  };
+
+  const handleVisitPage = () => {
+    toast({
+      title: "Visit page",
+      description: `Redirecting to ${page.name} (simulated).`,
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">{page.name}</CardTitle>
+        <CardDescription>Manage your Facebook page content</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* File upload */}
+          <div>
+            <Label 
+              htmlFor={`file-upload-${tabId}-${page.id}`}
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Upload Media
+            </Label>
+            <div className="flex items-center">
+              <label 
+                htmlFor={`file-upload-${tabId}-${page.id}`}
+                className={`flex items-center justify-center w-full h-32 px-4 transition bg-white dark:bg-gray-800 
+                            border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-md appearance-none cursor-pointer
+                            hover:border-facebook focus:outline-none ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <span className="flex items-center space-x-2">
+                  <FileImage size={24} className="text-gray-500 dark:text-gray-400" />
+                  <span className="font-medium text-gray-600 dark:text-gray-300">
+                    {selectedFile ? selectedFile.name : "Click to select a file"}
+                  </span>
+                </span>
+                <input 
+                  id={`file-upload-${tabId}-${page.id}`}
+                  name="file_upload" 
+                  type="file" 
+                  className="hidden"
+                  onChange={handleFileChange}
+                  disabled={!isLoggedIn}
+                  accept="image/*,video/*"
+                />
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              PNG, JPG, GIF, or MP4 up to 10MB
+            </p>
+          </div>
+          
+          {/* Hashtag input */}
+          <div>
+            <div className="space-y-6">
+              <div>
+                <Label 
+                  htmlFor={`hashtag-${tabId}-${page.id}`}
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
+                  Hashtag
+                </Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Hash size={18} className="text-gray-400" />
+                  </div>
+                  <Input
+                    id={`hashtag-${tabId}-${page.id}`}
+                    placeholder="Enter hashtag without # symbol"
+                    className="pl-10"
+                    value={hashtag}
+                    onChange={(e) => setHashtag(e.target.value)}
+                    disabled={!isLoggedIn}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="outline"
+                  className={`flex items-center gap-2 ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={handleVisitPage}
+                  disabled={!isLoggedIn}
+                >
+                  <Link size={18} />
+                  Visit Page
+                </Button>
+                
+                <Button
+                  className={`bg-facebook hover:bg-facebook-dark text-white flex items-center gap-2 ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={handleUpload}
+                  disabled={!isLoggedIn || isUploading}
+                >
+                  {isUploading ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-1"></div>
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={18} />
+                      Upload Post
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
