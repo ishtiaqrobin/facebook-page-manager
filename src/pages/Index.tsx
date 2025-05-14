@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useToast } from '@/components/ui/use-toast'; // Updated import path
+import { useToast } from '@/hooks/use-toast'; // Import directly from hooks
 import TabBar from '@/components/TabBar';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
