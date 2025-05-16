@@ -188,6 +188,8 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     navigate("/");
   };
 
+  console.log(user, "user data from UserContext");
+
   return (
     <UserContext.Provider
       value={{
