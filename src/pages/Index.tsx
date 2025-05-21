@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import TabBar from '@/components/TabBar';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Link } from 'react-router-dom';
 
 const Index: React.FC = () => {
   const { toast } = useToast();
@@ -53,6 +54,25 @@ const Index: React.FC = () => {
             actionText="Settings"
             isDarkMode={isDarkMode}
           />
+        </div>
+        
+        <div className="mt-8 p-6 rounded-lg shadow-md text-center bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+          <h2 className="text-2xl font-bold mb-4">New Authentication System</h2>
+          <p className="mb-6">Try our new authentication system with secure login, registration, and OTP verification</p>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link 
+              to="/login" 
+              className="bg-white text-blue-600 hover:bg-blue-50 px-6 py-2 rounded-md font-medium transition-colors"
+            >
+              Login
+            </Link>
+            <Link 
+              to="/register" 
+              className="bg-transparent hover:bg-white/10 border border-white px-6 py-2 rounded-md font-medium transition-colors"
+            >
+              Register
+            </Link>
+          </div>
         </div>
       </main>
       
